@@ -1,0 +1,254 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  PATIENT
+  DRIVER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+}
+
+enum Priority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum AmbulanceType {
+  BASIC
+  ADVANCED
+  ICU
+  NEONATAL
+}
+
+enum AmbulanceStatus {
+  AVAILABLE
+  ON_TRIP
+  OFFLINE
+  MAINTENANCE
+}
+
+enum RequestStatus {
+  PENDING
+  DISPATCHED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TripStatus {
+  DISPATCHED
+  EN_ROUTE
+  ARRIVED_AT_PICKUP
+  PICKED_UP
+  EN_ROUTE_TO_HOSPITAL
+  ARRIVED_AT_HOSPITAL
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+model User {
+  id               String             @id @default(uuid())
+  name             String
+  email            String             @unique
+  phone            String?
+  passwordHash     String?
+  provider         AuthProvider       @default(LOCAL)
+  googleId         String?            @unique
+  role             Role               @default(PATIENT)
+  status           UserStatus         @default(ACTIVE)
+  avatarUrl        String?
+  refreshTokenHash String?
+  deletedAt        DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  driver           Driver?
+  requests         EmergencyRequest[]
+  payments         Payment[]
+  notifications    Notification[]
+
+  @@index([role, status])
+}
+
+model Driver {
+  id              String     @id @default(uuid())
+  userId          String     @unique
+  user            User       @relation(fields: [userId], references: [id])
+  licenseNumber   String     @unique
+  licenseImageUrl String?
+  isOnDuty        Boolean    @default(false)
+  ambulance       Ambulance?
+  deletedAt       DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model Ambulance {
+  id                String          @id @default(uuid())
+  plateNumber       String          @unique
+  type              AmbulanceType
+  status            AmbulanceStatus @default(OFFLINE)
+  photoUrl          String?
+  lat               Float?
+  lng               Float?
+  locationUpdatedAt DateTime?
+  driverId          String?         @unique
+  driver            Driver?         @relation(fields: [driverId], references: [id])
+  baseFare          Decimal         @default(500) @db.Decimal(10, 2)
+  perKmRate         Decimal         @default(30) @db.Decimal(10, 2)
+  deletedAt         DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  trips             Trip[]
+
+  @@index([status, type])
+}
+
+model Hospital {
+  id            String    @id @default(uuid())
+  name          String
+  address       String
+  city          String
+  lat           Float
+  lng           Float
+  phone         String
+  specialties   String[]
+  totalBeds     Int
+  availableBeds Int
+  hasEmergency  Boolean   @default(true)
+  imageUrl      String?
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  trips         Trip[]
+
+  @@index([city, hasEmergency])
+}
+
+model EmergencyRequest {
+  id                String        @id @default(uuid())
+  patientId         String
+  patient           User          @relation(fields: [patientId], references: [id])
+  patientName       String
+  patientPhone      String
+  emergencyType     String
+  description       String?
+  conditionImageUrl String?
+  priority          Priority
+  requiredType      AmbulanceType @default(BASIC)
+  pickupAddress     String
+  pickupLat         Float
+  pickupLng         Float
+  status            RequestStatus @default(PENDING)
+  cancelledReason   String?
+  deletedAt         DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  trip              Trip?
+
+  @@index([status, priority, createdAt])
+  @@index([patientId])
+}
+
+model Trip {
+  id           String            @id @default(uuid())
+  requestId    String            @unique
+  request      EmergencyRequest  @relation(fields: [requestId], references: [id])
+  ambulanceId  String
+  ambulance    Ambulance         @relation(fields: [ambulanceId], references: [id])
+  hospitalId   String?
+  hospital     Hospital?         @relation(fields: [hospitalId], references: [id])
+  status       TripStatus        @default(DISPATCHED)
+  distanceKm   Decimal?          @db.Decimal(10, 2)
+  fare         Decimal?          @db.Decimal(10, 2)
+  dispatchedAt DateTime          @default(now())
+  completedAt  DateTime?
+  events       TripStatusEvent[]
+  payment      Payment?
+
+  @@index([ambulanceId, status])
+  @@index([hospitalId])
+}
+
+model TripStatusEvent {
+  id        String     @id @default(uuid())
+  tripId    String
+  trip      Trip       @relation(fields: [tripId], references: [id])
+  status    TripStatus
+  note      String?
+  actorId   String?
+  createdAt DateTime   @default(now())
+
+  @@index([tripId, createdAt])
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  tripId          String        @unique
+  trip            Trip          @relation(fields: [tripId], references: [id])
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String        @default("BDT")
+  status          PaymentStatus @default(PENDING)
+  tranId          String        @unique
+  valId           String?
+  gatewayResponse Json?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([userId, status])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([actorId, createdAt])
+}
