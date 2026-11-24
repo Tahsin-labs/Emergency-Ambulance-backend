@@ -4,7 +4,7 @@ import { AppError } from '../utils/AppError';
 
 export const authorize = (...roles: Role[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const user = (req as any).user;
+    const user = req.user;
 
     if (!user) {
       return next(new AppError(401, 'Unauthorized. Please log in.'));

@@ -4,6 +4,7 @@ import { AppError } from '../utils/AppError';
 import { verifyToken } from '../utils/jwt';
 import { env } from '../config/env';
 import { prisma } from '../config/prisma';
+import { UserStatus } from '@prisma/client';
 
 export const auth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -23,13 +24,15 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
       throw new AppError(401, 'User associated with this token no longer exists.');
     }
 
-    if (user.status === 'SUSPENDED') {
+    if (user.status === UserStatus.SUSPENDED) {
       throw new AppError(403, 'Your account is suspended.');
     }
 
-    (req as any).user = user;
+    req.user = user;
     next();
   } catch (error) {
     next(error);
   }
 };
+
+export const authenticate = auth;
