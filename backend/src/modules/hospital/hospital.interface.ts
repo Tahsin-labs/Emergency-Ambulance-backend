@@ -1,0 +1,2 @@
+// Hospital module placeholder
+export {};

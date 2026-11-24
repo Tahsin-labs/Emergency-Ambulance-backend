@@ -1,0 +1,2 @@
+// Ambulance module placeholder
+export {};

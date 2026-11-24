@@ -1,0 +1,2 @@
+// EmergencyRequest module placeholder
+export {};
