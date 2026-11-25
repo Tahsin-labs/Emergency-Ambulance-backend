@@ -9,6 +9,7 @@ import { EmergencyRequestRoutes } from '../modules/emergencyRequest/emergencyReq
 import { TripRoutes } from '../modules/trip/trip.routes';
 import { NotificationRoutes } from '../modules/notification/notification.routes';
 import { AdminRoutes } from '../modules/admin/admin.routes';
+import { PaymentRoutes } from '../modules/payment/payment.routes';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.use('/emergency-requests', EmergencyRequestRoutes);
 router.use('/trips', TripRoutes);
 router.use('/notifications', NotificationRoutes);
 router.use('/admin', AdminRoutes);
+router.use('/payments', PaymentRoutes);
 
 // Health check endpoint
 router.get('/health', (req: Request, res: Response) => {
