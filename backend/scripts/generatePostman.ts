@@ -1259,6 +1259,17 @@ const folderDemoFlow = {
       description: "Patient loaded. Request cancellation is permanently locked."
     }),
     createReq({
+      name: "10b Select Receiving Hospital",
+      method: "PATCH",
+      urlPath: "api/v1/trips/{{tripId}}/hospital",
+      authRole: "DRIVER",
+      body: {
+        hospitalId: "{{hospitalId}}"
+      },
+      expectedStatus: 200,
+      description: "Sets destination hospital for the trip before routing."
+    }),
+    createReq({
       name: "11 Driver Navigates to Hospital",
       method: "PATCH",
       urlPath: "api/v1/trips/{{tripId}}/status",

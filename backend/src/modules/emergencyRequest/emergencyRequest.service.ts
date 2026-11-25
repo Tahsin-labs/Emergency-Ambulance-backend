@@ -74,8 +74,8 @@ export const EmergencyRequestService = {
         priority,
         requiredType,
         pickupAddress: payload.pickupAddress,
-        pickupLat: payload.pickupLat,
-        pickupLng: payload.pickupLng,
+        pickupLat: Number(payload.pickupLat),
+        pickupLng: Number(payload.pickupLng),
         status: RequestStatus.PENDING,
       },
     });
