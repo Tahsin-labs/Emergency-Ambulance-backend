@@ -10,7 +10,7 @@ const router = Router();
 router.use(authenticate);
 
 // IMPORTANT: /read-all must be registered BEFORE /:id
-router.get('/', validateRequest(NotificationValidation.getNotificationsQuery, 'query'), NotificationController.getMyNotifications);
+router.get('/', validateRequest(NotificationValidation.getNotificationsQuery), NotificationController.getMyNotifications);
 router.patch('/read-all', NotificationController.markAllAsRead);
 router.patch('/:id/read', NotificationController.markOneAsRead);
 

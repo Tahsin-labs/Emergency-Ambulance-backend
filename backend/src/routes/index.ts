@@ -7,6 +7,8 @@ import { DriverRoutes } from '../modules/driver/driver.routes';
 import { HospitalRoutes } from '../modules/hospital/hospital.routes';
 import { EmergencyRequestRoutes } from '../modules/emergencyRequest/emergencyRequest.routes';
 import { TripRoutes } from '../modules/trip/trip.routes';
+import { NotificationRoutes } from '../modules/notification/notification.routes';
+import { AdminRoutes } from '../modules/admin/admin.routes';
 
 const router = Router();
 
@@ -18,6 +20,8 @@ router.use('/drivers', DriverRoutes);
 router.use('/hospitals', HospitalRoutes);
 router.use('/emergency-requests', EmergencyRequestRoutes);
 router.use('/trips', TripRoutes);
+router.use('/notifications', NotificationRoutes);
+router.use('/admin', AdminRoutes);
 
 // Health check endpoint
 router.get('/health', (req: Request, res: Response) => {

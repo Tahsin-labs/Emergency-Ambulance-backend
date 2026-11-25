@@ -11,11 +11,11 @@ const router = Router();
 // ADMIN only on every route
 router.use(authenticate, authorize(Role.ADMIN));
 
-router.get('/users', validateRequest(AdminValidation.getUsersQuery, 'query'), AdminController.getUsers);
-router.patch('/users/:id/role', validateRequest(AdminValidation.updateRoleBody, 'body'), AdminController.updateUserRole);
-router.patch('/users/:id/status', validateRequest(AdminValidation.updateStatusBody, 'body'), AdminController.updateUserStatus);
+router.get('/users', validateRequest(AdminValidation.getUsersQuery), AdminController.getUsers);
+router.patch('/users/:id/role', validateRequest(AdminValidation.updateRoleBody), AdminController.updateUserRole);
+router.patch('/users/:id/status', validateRequest(AdminValidation.updateStatusBody), AdminController.updateUserStatus);
 router.get('/dashboard-stats', AdminController.getDashboardStats);
-router.get('/reports/incidents', validateRequest(AdminValidation.getIncidentsReportQuery, 'query'), AdminController.getIncidentsReport);
-router.get('/audit-logs', validateRequest(AdminValidation.getAuditLogsQuery, 'query'), AdminController.getAuditLogs);
+router.get('/reports/incidents', validateRequest(AdminValidation.getIncidentsReportQuery), AdminController.getIncidentsReport);
+router.get('/audit-logs', validateRequest(AdminValidation.getAuditLogsQuery), AdminController.getAuditLogs);
 
 export const AdminRoutes = router;

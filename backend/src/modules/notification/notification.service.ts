@@ -1,5 +1,5 @@
 import { prisma } from '../../config/prisma';
-import AppError from '../../utils/AppError';
+import { AppError } from '../../utils/AppError';
 import { QueryBuilder } from '../../utils/QueryBuilder';
 
 export class NotificationService {

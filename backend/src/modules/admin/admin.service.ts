@@ -1,6 +1,6 @@
 import { Role, UserStatus, AmbulanceStatus, TripStatus, RequestStatus, PaymentStatus } from '@prisma/client';
 import { prisma } from '../../config/prisma';
-import AppError from '../../utils/AppError';
+import { AppError } from '../../utils/AppError';
 import { createAuditLog } from '../../utils/audit';
 import { QueryBuilder } from '../../utils/QueryBuilder';
 
@@ -129,7 +129,7 @@ export class AdminService {
       }
     }
 
-    if (targetUser.role === Role.DRIVER && newRole !== Role.DRIVER) {
+    if (targetUser.role === Role.DRIVER && (newRole as Role) !== Role.DRIVER) {
       if (targetUser.driver) {
         if (targetUser.driver.ambulance) {
           const activeTrips = targetUser.driver.ambulance.trips;
