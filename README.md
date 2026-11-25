@@ -7,21 +7,6 @@ A high-performance, resilient, production-ready backend REST API for emergency a
 ## 📌 Project Overview
 The **Emergency Ambulance Dispatch System** provides an end-to-end mission-critical backend service. When patients request emergency medical transportation, the priority engine instantly triages the request (CRITICAL, HIGH, MEDIUM, LOW) and automatically dispatches the nearest suitable ambulance (BASIC, ADVANCED, ICU, NEONATAL) using transactional `FOR UPDATE SKIP LOCKED` database locking. If all units are occupied, requests queue by priority rank and are immediately dispatched the moment an ambulance or driver becomes available.
 
-### Live Deployment & Demo Links
-- **Live Production API Base URL**: `https://emergency-ambulance-backend-sovv.onrender.com`
-- **Postman Published Documentation**: `https://documenter.getpostman.com/view/placeholder` *(Import collection from `docs/postman/`)*
-- **Demo Video Walkthrough**: `https://youtu.be/placeholder` *(Placeholder)*
-- **Demo Admin Credentials**:
-  - Email: `admin@ambulance.com` *(Configurable via env)*
-  - Password: `[CONFIGURED_IN_ENV]` *(Set via ADMIN_PASSWORD)*
-- **Demo Patient Credentials**:
-  - Email: `patient1@example.com`
-  - Password: `Patient@123456`
-- **Demo Driver Credentials**:
-  - Email: `driver3@ambulance.com`
-  - Password: `Driver@123456`
-
----
 
 ## 🛠️ Tech Stack
 - **Runtime & Language**: Node.js (v20+), TypeScript (strict mode)
@@ -33,38 +18,6 @@ The **Emergency Ambulance Dispatch System** provides an end-to-end mission-criti
 - **File Uploads**: Multer + Cloudinary streaming buffer uploads
 - **Payment Gateway**: SSLCommerz Sandbox API integration (initiate, validation, IPN, auto settlement)
 
----
-
-
----
-
-## 🗄️ Database Architecture & Entity Relations
-
-```
-[ User ] 1 ──── 0..1 [ Driver ] 1 ──── 0..1 [ Ambulance ]
-   │                     │                       │
-   │ 1                   │ 0..1                  │ 1
-   ▼                     ▼                       ▼
-[ EmergencyRequest ] 1 ──────────────────────── 0..1 [ Trip ] 1 ──── 0..1 [ Payment ]
-   │                                                     │
-   │ 1..*                                                │ 1..*
-   ▼                                                     ▼
-[ Notification ]                                [ TripStatusEvent ]
-```
-
-### Models:
-1. **User**: System identities (PATIENT, DRIVER, ADMIN). Stores hashed credentials, OAuth Google ID, status (ACTIVE, SUSPENDED), avatar, and hashed refresh tokens.
-2. **Driver**: 1-to-1 profile linked to DRIVER user. Stores license number, image URL, and on-duty availability flag (`isOnDuty`).
-3. **Ambulance**: Fleet vehicles. Stores plate number, type (`BASIC`, `ADVANCED`, `ICU`, `NEONATAL`), status (`AVAILABLE`, `ON_TRIP`, `OFFLINE`, `MAINTENANCE`), base fare, per-km rate, and real-time GPS coordinates (`lat`, `lng`).
-4. **Hospital**: Receiving hospitals. Stores name, address, coordinates, emergency capabilities, total beds, and live available bed counts.
-5. **EmergencyRequest**: Incident requests. Stores patient details, condition image, evaluated `priority` (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`), `requiredType`, coordinates, address, status, and cancel reason.
-6. **Trip**: Active transit state machine. Links an EmergencyRequest to an Ambulance and Hospital. Tracks live status, computed distance, total fare, timestamps.
-7. **TripStatusEvent**: Immutable append-only audit trail for every status transition.
-8. **Payment**: Financial transactions. Tracks `tranId`, `valId`, amount, currency, status (`PENDING`, `PAID`, `FAILED`, `CANCELLED`), sanitized SSLCommerz gateway response.
-9. **Notification**: In-app notifications per user with `unreadCount` tracking.
-10. **AuditLog**: Regulatory audit trail capturing actor, entity, action, IP, and changes.
-
----
 
 ## 🧠 Priority Triage & Automated Dispatch Algorithm
 
@@ -74,22 +27,6 @@ The system uses automated keyword and medical category mapping:
 - **HIGH** (Requires **ADVANCED** Ambulance): Major accidents, labor/pregnancy complications, severe burns, active seizures.
 - **MEDIUM** (Requires **BASIC** Ambulance): Fractures, high fever, moderate lacerations.
 - **LOW** (Requires **BASIC** Ambulance): Non-urgent medical transport.
-
-### 2. Transactional Fleet Selection (`FOR UPDATE SKIP LOCKED`)
-Dispatch runs inside an isolated database transaction:
-1. Lock the pending emergency request (`FOR UPDATE`).
-2. Query candidate ambulances where `status = 'AVAILABLE'`, driver is active and on-duty (`isOnDuty = true`), and ambulance is not deleted.
-3. Order matching:
-   - **Type Compatibility**: Exact required type first, then higher tiers (`ICU` > `ADVANCED` > `BASIC`). `NEONATAL` is only dispatched when specifically requested.
-   - **Haversine Proximity**: Shortest geographical distance from pickup coordinates.
-4. Lock the chosen vehicle using `FOR UPDATE SKIP LOCKED`.
-5. Simultaneously transition ambulance to `ON_TRIP`, create the `Trip` record, link nearest emergency-capable hospital, and generate notifications.
-
-### 3. Priority Queue & Event Hooks
-If no compatible ambulance is available, requests remain in `PENDING` status. The queue engine automatically triggers `dispatchNextPending()` whenever:
-- A driver toggles duty status to ON (`PATCH /drivers/me/availability`)
-- A completed trip frees an ambulance (`COMPLETED`)
-- An admin switches ambulance status to `AVAILABLE` or assigns a new driver.
 
 ---
 
