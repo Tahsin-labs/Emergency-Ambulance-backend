@@ -1,6 +1,7 @@
 import { prisma } from '../../config/prisma';
 import { AppError } from '../../utils/AppError';
 import { AmbulanceStatus, TripStatus } from '@prisma/client';
+import { DispatchService } from '../dispatch/dispatch.service';
 
 const ACTIVE_TRIP_STATUSES = [
   TripStatus.DISPATCHED,
@@ -65,7 +66,7 @@ export const DriverService = {
   },
 
   async updateAvailability(userId: string, isOnDuty: boolean) {
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const driver = await tx.driver.findUnique({
         where: { userId },
         include: {
@@ -121,6 +122,14 @@ export const DriverService = {
 
       return updatedDriver;
     });
+
+    if (isOnDuty) {
+      setTimeout(() => {
+        DispatchService.dispatchNextPending().catch(console.error);
+      }, 50);
+    }
+
+    return result;
   },
 
   async updateLocation(userId: string, coords: { lat: number; lng: number }) {

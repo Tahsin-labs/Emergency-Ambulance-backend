@@ -3,6 +3,7 @@ import { AppError } from '../../utils/AppError';
 import { calculateHaversineDistance } from '../../utils/haversine';
 import { uploadBuffer, deleteByUrl } from '../../utils/cloudinaryUpload';
 import { AmbulanceStatus, AmbulanceType, TripStatus } from '@prisma/client';
+import { DispatchService } from '../dispatch/dispatch.service';
 
 const ACTIVE_TRIP_STATUSES = [
   TripStatus.DISPATCHED,
@@ -265,6 +266,12 @@ export const AmbulanceService = {
       },
     });
 
+    if (payload.status === AmbulanceStatus.AVAILABLE) {
+      setTimeout(() => {
+        DispatchService.dispatchNextPending().catch(console.error);
+      }, 50);
+    }
+
     return updated;
   },
 
@@ -297,7 +304,7 @@ export const AmbulanceService = {
   },
 
   async assignDriver(id: string, driverId: string | null) {
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const ambulance = await tx.ambulance.findUnique({
         where: { id },
         include: {
@@ -360,5 +367,13 @@ export const AmbulanceService = {
 
       return updated;
     });
+
+    if (driverId) {
+      setTimeout(() => {
+        DispatchService.dispatchNextPending().catch(console.error);
+      }, 50);
+    }
+
+    return result;
   },
 };
