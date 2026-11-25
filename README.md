@@ -8,8 +8,8 @@ A high-performance, resilient, production-ready backend REST API for emergency a
 The **Emergency Ambulance Dispatch System** provides an end-to-end mission-critical backend service. When patients request emergency medical transportation, the priority engine instantly triages the request (CRITICAL, HIGH, MEDIUM, LOW) and automatically dispatches the nearest suitable ambulance (BASIC, ADVANCED, ICU, NEONATAL) using transactional `FOR UPDATE SKIP LOCKED` database locking. If all units are occupied, requests queue by priority rank and are immediately dispatched the moment an ambulance or driver becomes available.
 
 ### Live Deployment & Demo Links
-- **Live API Base URL**: `https://emergency-ambulance-api.onrender.com` *(Placeholder)*
-- **Postman API Documentation**: `https://documenter.getpostman.com/view/placeholder` *(Placeholder)*
+- **Live Production API Base URL**: `https://emergency-ambulance-backend-sovv.onrender.com`
+- **Postman Published Documentation**: `https://documenter.getpostman.com/view/placeholder` *(Import collection from `docs/postman/`)*
 - **Demo Video Walkthrough**: `https://youtu.be/placeholder` *(Placeholder)*
 - **Demo Admin Credentials**:
   - Email: `admin@ambulance.com` *(Configurable via env)*
@@ -18,7 +18,7 @@ The **Emergency Ambulance Dispatch System** provides an end-to-end mission-criti
   - Email: `patient1@example.com`
   - Password: `Patient@123456`
 - **Demo Driver Credentials**:
-  - Email: `driver1@ambulance.com`
+  - Email: `driver3@ambulance.com`
   - Password: `Driver@123456`
 
 ---
@@ -251,19 +251,26 @@ npx ts-node scripts/smokeProd.ts http://localhost:5000
 ### Deployment Verification
 Run the smoke test suite against your deployed instance:
 ```bash
-npx ts-node backend/scripts/smokeProd.ts https://emergency-ambulance-api.onrender.com
+npx ts-node backend/scripts/smokeProd.ts https://emergency-ambulance-backend-sovv.onrender.com
 ```
-Checks performed:
-- `GET /`: API greeting and root version
-- `GET /api/v1/health`: Neon DB connectivity & uptime
-- `POST /api/v1/auth/login`: Admin authentication check
-- `GET /api/v1/ambulances`: Admin authenticated fleet access
-- `GET /api/v1/hospitals`: Public hospital directory access
-- `GET /api/v1/admin/dashboard-stats`: Real-time system analytics
-- Unauthenticated access returns `401 Unauthorized`
-- Patient accessing admin route returns `403 Forbidden`
 
 ---
 
-## 📚 Complete API Documentation
-All 60 endpoints, methods, and full path descriptions are cataloged in [docs/ROUTES.md](file:///c:/Backend-ts/Emergency%20Ambulance/docs/ROUTES.md).
+## 📮 Postman Collection & API Documentation
+
+A complete, production-grade Postman collection and environment definitions are provided under [`docs/postman/`](file:///c:/Backend-ts/Emergency%20Ambulance/docs/postman/):
+
+### 1. Files Included
+- **Collection**: `docs/postman/Emergency-Ambulance-Dispatch.postman_collection.json` (Postman Collection v2.1)
+- **Local Environment**: `docs/postman/Local.postman_environment.json` (`baseUrl: http://localhost:5000`)
+- **Production Environment**: `docs/postman/Production.postman_environment.json` (`baseUrl: https://emergency-ambulance-backend-sovv.onrender.com`)
+
+### 2. How to Import and Execute
+1. Open **Postman** $\rightarrow$ Click **Import** $\rightarrow$ Drag & drop the three JSON files from `docs/postman/`.
+2. In the top-right environment selector, choose either:
+   - **Emergency Ambulance Dispatch - Local** (for local development)
+   - **Emergency Ambulance Dispatch - Production** (for the live Render deployment)
+3. To run the automated end-to-end user story, open folder **`11 FULL DEMO FLOW`** and click **Run folder**:
+   - Executes 16 chained requests with automatic token passing and dynamic variable storage.
+   - Transitions an emergency request from initial dispatch through hospital routing, trip completion, fare computation, and payment URL generation.
+4. All 60 REST endpoints are cataloged with methods and descriptions in [docs/ROUTES.md](file:///c:/Backend-ts/Emergency%20Ambulance/docs/ROUTES.md).
