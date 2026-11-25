@@ -35,26 +35,6 @@ The **Emergency Ambulance Dispatch System** provides an end-to-end mission-criti
 
 ---
 
-## 👥 Roles & Permissions Matrix
-
-| Resource / Endpoint | PATIENT | DRIVER | ADMIN |
-|---|:---:|:---:|:---:|
-| **Register (Self)** | ✅ | ❌ | ❌ |
-| **Login / Google Login / Token Refresh** | ✅ | ✅ | ✅ |
-| **Manage Profile & Avatar (`/users/me`)** | ✅ | ✅ | ✅ |
-| **Request Ambulance (`POST /emergency-requests`)** | ✅ | ❌ | ❌ |
-| **Cancel Own Request (before pickup)** | ✅ | ❌ | ✅ |
-| **View Own Requests & Trips** | ✅ | ✅ | ✅ |
-| **Driver Duty Status & Location Updates** | ❌ | ✅ | ❌ |
-| **Trip State Transitions (`PATCH /trips/:id/status`)** | ❌ | ✅ (Assigned) | ❌ |
-| **Initiate Payment (`POST /payments/initiate`)** | ✅ (Completed) | ❌ | ❌ |
-| **View Notifications (`/notifications`)** | ✅ | ✅ | ✅ |
-| **Fleet & Driver Management (`/ambulances`, `/drivers`)** | ❌ | ❌ | ✅ |
-| **Hospital Management & Bed Capacity** | ❌ | ❌ | ✅ |
-| **Manual Dispatch & Priority Override** | ❌ | ❌ | ✅ |
-| **User Role & Status Management (`/admin/users`)** | ❌ | ❌ | ✅ |
-| **Dashboard Analytics & Incident Reports** | ❌ | ❌ | ✅ |
-| **System Audit Logs (`/admin/audit-logs`)** | ❌ | ❌ | ✅ |
 
 ---
 
