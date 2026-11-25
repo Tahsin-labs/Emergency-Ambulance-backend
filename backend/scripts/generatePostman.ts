@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Generator for Emergency Ambulance Dispatch Postman Collection v2.1
 const collection = {
