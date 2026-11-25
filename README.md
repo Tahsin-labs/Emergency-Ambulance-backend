@@ -1,193 +1,68 @@
-# Emergency Ambulance Dispatch System — Backend REST API
+# Emergency Ambulance Dispatch & Life Support Network
 
-A high-performance, resilient, production-ready backend REST API for emergency ambulance dispatch, priority triage, automated fleet matching, incident tracking, real-time trip lifecycle management, and SSLCommerz payment integration.
-
----
-
-## 📌 Project Overview
-The **Emergency Ambulance Dispatch System** provides an end-to-end mission-critical backend service. When patients request emergency medical transportation, the priority engine instantly triages the request (CRITICAL, HIGH, MEDIUM, LOW) and automatically dispatches the nearest suitable ambulance (BASIC, ADVANCED, ICU, NEONATAL) using transactional `FOR UPDATE SKIP LOCKED` database locking. If all units are occupied, requests queue by priority rank and are immediately dispatched the moment an ambulance or driver becomes available.
-
-
-## 🛠️ Tech Stack
-- **Runtime & Language**: Node.js (v20+), TypeScript (strict mode)
-- **Framework**: Express.js
-- **Database**: PostgreSQL (Neon Serverless Postgres with pooling & direct connection)
-- **ORM**: Prisma ORM with automated migrations & connection pooling
-- **Validation**: Zod schema validation on body, query, and path params
-- **Authentication & Security**: JWT (Access Token 15m, Refresh Token 7d with SHA-256 rotation), bcrypt (12 salt rounds), Helmet, CORS, Express-Rate-Limit (strict windowing on auth & payments)
-- **File Uploads**: Multer + Cloudinary streaming buffer uploads
-- **Payment Gateway**: SSLCommerz Sandbox API integration (initiate, validation, IPN, auto settlement)
-
-
-## 🧠 Priority Triage & Automated Dispatch Algorithm
-
-### 1. Priority Evaluation Engine
-The system uses automated keyword and medical category mapping:
-- **CRITICAL** (Requires **ICU** Ambulance): Cardiac arrest, heart attack, unconsciousness, severe bleeding, breathing failure, stroke, choking.
-- **HIGH** (Requires **ADVANCED** Ambulance): Major accidents, labor/pregnancy complications, severe burns, active seizures.
-- **MEDIUM** (Requires **BASIC** Ambulance): Fractures, high fever, moderate lacerations.
-- **LOW** (Requires **BASIC** Ambulance): Non-urgent medical transport.
+A mission-critical emergency ambulance dispatch and hospital bed coordination system built with **Next.js 15 (App Router)**, **TypeScript**, **Tailwind CSS**, and **Express + Prisma + Neon PostgreSQL**.
 
 ---
 
-## 🔄 Trip State Machine Lifecycle
+## 🌟 Key Features
 
-```
-[ REQUEST CREATED ]
-        │
-        ▼ (Auto-Dispatch / Admin Dispatch)
-  [ DISPATCHED ] ── (Cancelled by Patient/Admin) ──► [ CANCELLED ]
-        │
-        ▼
-   [ EN_ROUTE ] ── (Cancelled by Patient/Admin) ──► [ CANCELLED ]
-        │
-        ▼
-[ ARRIVED_AT_PICKUP ] ── (Cancelled by Patient/Admin) ──► [ CANCELLED ]
-        │
-        ▼
-  [ PICKED_UP ] ── (Cancellation strictly forbidden after pickup)
-        │
-        ▼
-[ EN_ROUTE_TO_HOSPITAL ]
-        │
-        ▼
-[ ARRIVED_AT_HOSPITAL ]
-        │
-        ▼
-  [ COMPLETED ] ──► (Automated Fare Calculation + Payment Row Generated)
-        │
-        ▼
-[ PAYMENT INITIATED ] ──► [ PAID ]
-```
+1. **Intelligent Triage Priority Engine**:
+   - Classifies medical urgency (CRITICAL, HIGH, MEDIUM, LOW) based on emergency type and symptom keywords.
+   - Automatically allocates appropriate life-support units (Basic, ALS, or ICU).
+
+2. **Sequential Trip State Machine**:
+   - `ACCEPTED` $\rightarrow$ `EN_ROUTE` $\rightarrow$ `ARRIVED_AT_PICKUP` $\rightarrow$ `PICKED_UP` $\rightarrow$ `EN_ROUTE_TO_HOSPITAL` $\rightarrow$ `ARRIVED_AT_HOSPITAL` $\rightarrow$ `COMPLETED`.
+   - Real-time polling tracking with cancellation guard before patient boarding.
+
+3. **Secure BFF Authentication & Edge Middleware**:
+   - `httpOnly` SameSite=Lax JWT cookies (15-min access token, 7-day refresh token).
+   - Mutex-locked silent token refresh on 401 prevents parallel refresh token rotation race conditions.
+   - Edge Route Middleware protects role-specific portals (`/admin/*`, `/driver/*`, `/patient/*`).
+
+4. **1-Click Demo Login**:
+   - Single-click authentication for **Patient**, **Driver**, and **Admin** test roles directly from `/login`.
+
+5. **SSLCommerz Payment Integration**:
+   - Distance and tier-based digital fare calculation with instant sandbox payment initiation and verified callbacks.
+
+6. **Hospital & ICU Bed Coordination**:
+   - Real-time directory displaying partner hospitals with live ICU and general bed availability counters.
 
 ---
 
-## 💳 Payment Gateway Workflow (SSLCommerz)
+## 🚀 Live Links & Portals
 
-1. **Initiation (`POST /api/v1/payments/initiate`)**:
-   - Only patient who created the completed trip can initiate payment.
-   - Exact amount is derived from the database (`Trip.fare`); client-submitted amounts are rejected.
-   - Generates a unique `tranId` and calls SSLCommerz `gwprocess/v4/api.php`.
-   - Returns a secured `GatewayPageURL`.
-2. **Success Callback (`POST /api/v1/payments/success`)**:
-   - SSLCommerz redirects browser back with `tran_id` and `val_id`.
-   - Backend calls SSLCommerz `validationserverAPI.php` to verify:
-     - Gateway status is `VALID` or `VALIDATED`.
-     - Transaction ID matches.
-     - Currency and exact amount match.
-   - Payment is set to `PAID`, patient receives notification, and audit log is recorded.
-3. **Idempotence & Safety**:
-   - Already `PAID` transactions can never be downgraded by subsequent duplicate webhooks or fail callbacks.
-   - Secret credentials (`SSL_STORE_PASSWORD`) are never logged or stored in `gatewayResponse`.
+- **Frontend Live App**: [Deployed on Vercel]
+- **Backend API (Render)**: [https://emergency-ambulance-backend-sovv.onrender.com/api/v1](https://emergency-ambulance-backend-sovv.onrender.com/api/v1)
+- **API Documentation**: [`docs/ROUTES.md`](docs/ROUTES.md)
+- **Postman Collection**: [`docs/postman/Emergency-Ambulance-Dispatch.postman_collection.json`](docs/postman/Emergency-Ambulance-Dispatch.postman_collection.json)
 
 ---
 
-## 🚀 Local Setup & Installation
+## 🔑 Demo Credentials
 
-### 1. Prerequisites
-- Node.js (v20+ recommended)
-- PostgreSQL database instance (Neon or local Postgres)
-- Git
+| Role | Email | Password | Assigned Equipment |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin@ambulance.com` | `Admin123!` | Full Governance & Analytics |
+| **Driver (ICU)** | `driver3@ambulance.com` | `Driver123!` | ICU Unit (`DHAKA-METRO-CH-11-1003`) |
+| **Patient** | `patient1@example.com` | `Patient123!` | Emergency Booking & Tracking |
 
-### 2. Clone and Install Dependencies
+---
+
+## 🛠️ Local Development Setup
+
+### Frontend
 ```bash
-git clone https://github.com/Tahsin-labs/Emergency-Ambulance-backend.git
-cd Emergency-Ambulance-backend/backend
+cd frontend
 npm install
-```
-
-### 3. Configure Environment Variables
-Create `.env` inside `backend/`:
-```env
-PORT=5000
-NODE_ENV=development
-DATABASE_URL="postgresql://user:pass@ep-host-pooler.neon.tech/neondb?sslmode=require&schema=ambulance"
-DIRECT_URL="postgresql://user:pass@ep-host.neon.tech/neondb?sslmode=require&schema=ambulance"
-
-JWT_ACCESS_SECRET="your-access-secret"
-JWT_ACCESS_EXPIRES="15m"
-JWT_REFRESH_SECRET="your-refresh-secret"
-JWT_REFRESH_EXPIRES="7d"
-
-GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"
-CLOUDINARY_CLOUD_NAME="your-cloudinary-name"
-CLOUDINARY_API_KEY="your-cloudinary-key"
-CLOUDINARY_API_SECRET="your-cloudinary-secret"
-
-SSL_STORE_ID="your-store-id"
-SSL_STORE_PASSWORD="your-store-password"
-SSL_IS_LIVE=false
-BACKEND_URL="http://localhost:5000"
-
-ADMIN_EMAIL="admin@ambulance.com"
-ADMIN_PASSWORD="Admin@123456"
-CORS_ORIGIN="*"
-```
-
-### 4. Database Migrations & Seeding
-```bash
-# Generate Prisma Client
-npm run prisma:generate
-
-# Run DB Migrations
-npm run prisma:migrate
-
-# Seed Demo Data (Admin, Drivers, Patients, Ambulances, Hospitals)
-npm run prisma:seed
-```
-
-### 5. Run the Server
-```bash
-# Development (with live-reload)
 npm run dev
-
-# Production Build & Start
-npm run build
-npm start
 ```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
----
-
-## 🧪 Automated Test Suites & Verification
-
-### Running Test Suites
+### Backend
 ```bash
-# Phase 4 (Triage, Concurrency, Dispatch, Trip State Machine)
-npx ts-node scripts/testPhase4.ts
-
-# Phase 5 (Notifications, Admin User Roles, Dashboard Analytics, Audit Logs)
-npx ts-node scripts/testPhase5.ts
-
-# Phase 6 (SSLCommerz Payment Gateway, Validation, Idempotence)
-npx ts-node scripts/testPhase6.ts
-
-# Production Smoke Verification (Can be targeted at local or live Render deployment)
-npx ts-node scripts/smokeProd.ts http://localhost:5000
+cd backend
+npm install
+npm run dev
 ```
-
-### Deployment Verification
-Run the smoke test suite against your deployed instance:
-```bash
-npx ts-node backend/scripts/smokeProd.ts https://emergency-ambulance-backend-sovv.onrender.com
-```
-
----
-
-## 📮 Postman Collection & API Documentation
-
-A complete, production-grade Postman collection and environment definitions are provided under [`docs/postman/`](file:///c:/Backend-ts/Emergency%20Ambulance/docs/postman/):
-
-### 1. Files Included
-- **Collection**: `docs/postman/Emergency-Ambulance-Dispatch.postman_collection.json` (Postman Collection v2.1)
-- **Local Environment**: `docs/postman/Local.postman_environment.json` (`baseUrl: http://localhost:5000`)
-- **Production Environment**: `docs/postman/Production.postman_environment.json` (`baseUrl: https://emergency-ambulance-backend-sovv.onrender.com`)
-
-### 2. How to Import and Execute
-1. Open **Postman** $\rightarrow$ Click **Import** $\rightarrow$ Drag & drop the three JSON files from `docs/postman/`.
-2. In the top-right environment selector, choose either:
-   - **Emergency Ambulance Dispatch - Local** (for local development)
-   - **Emergency Ambulance Dispatch - Production** (for the live Render deployment)
-3. To run the automated end-to-end user story, open folder **`11 FULL DEMO FLOW`** and click **Run folder**:
-   - Executes 16 chained requests with automatic token passing and dynamic variable storage.
-   - Transitions an emergency request from initial dispatch through hospital routing, trip completion, fare computation, and payment URL generation.
-4. All 60 REST endpoints are cataloged with methods and descriptions in [docs/ROUTES.md](file:///c:/Backend-ts/Emergency%20Ambulance/docs/ROUTES.md).
+Runs at [http://localhost:5000](http://localhost:5000).
