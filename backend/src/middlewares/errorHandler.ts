@@ -75,6 +75,12 @@ export const errorHandler: ErrorRequestHandler = (
     errors = [{ path: '', message: err.message }];
   }
 
+  // Hide detailed internal messages in production for 500 errors
+  if (env.NODE_ENV === 'production' && statusCode === 500) {
+    message = 'Internal Server Error';
+    errors = [{ path: '', message: 'An unexpected error occurred. Please try again later.' }];
+  }
+
   res.status(statusCode).json({
     success: false,
     message,

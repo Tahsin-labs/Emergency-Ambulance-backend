@@ -10,11 +10,23 @@ import appRoutes from './routes';
 
 const app: Application = express();
 
+// Trust reverse proxy (e.g. Render, Heroku, Cloudflare)
+app.set('trust proxy', 1);
+
 // Security and utility middlewares
 app.use(helmet());
 app.use(
   cors({
-    origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN.split(','),
+    origin: (origin, callback) => {
+      if (!origin || env.CORS_ORIGIN === '*') {
+        return callback(null, true);
+      }
+      const allowedOrigins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Allow or reflect
+    },
     credentials: true,
   }),
 );
@@ -25,16 +37,18 @@ app.use(cookieParser());
 // Global Rate Limiter
 app.use(globalRateLimiter);
 
-// Mount main API router under /api/v1
-app.use('/api/v1', appRoutes);
-
 // Root route
 app.get('/', (req, res) => {
   res.json({
     success: true,
-    message: 'Welcome to Emergency Ambulance Dispatch API v1',
+    message: 'Emergency Ambulance Dispatch API',
+    version: 'v1',
+    docs: 'see README',
   });
 });
+
+// Mount main API router under /api/v1
+app.use('/api/v1', appRoutes);
 
 // Not Found Handler
 app.use(notFound);

@@ -10,8 +10,8 @@ async function bootstrap() {
     await prisma.$connect();
     console.log('✅ Connected to Neon PostgreSQL database');
 
-    server = app.listen(env.PORT, () => {
-      console.log(`🚀 Emergency Ambulance Dispatch Server running on port ${env.PORT}`);
+    server = app.listen(env.PORT, '0.0.0.0', () => {
+      console.log(`🚀 Emergency Ambulance Dispatch Server running on port ${env.PORT} (0.0.0.0)`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

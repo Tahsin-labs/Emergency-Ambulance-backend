@@ -32,7 +32,10 @@ const envSchema = z.object({
 const parsedEnv = envSchema.safeParse(process.env);
 
 if (!parsedEnv.success) {
-  console.error('❌ Invalid environment variables:', parsedEnv.error.format());
+  console.error('❌ FATAL: Missing or invalid environment variables:');
+  parsedEnv.error.issues.forEach((issue) => {
+    console.error(`   - ${issue.path.join('.')}: ${issue.message}`);
+  });
   process.exit(1);
 }
 
