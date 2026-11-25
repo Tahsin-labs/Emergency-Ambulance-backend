@@ -116,18 +116,24 @@ async function runSmokeTests() {
     record('GET /api/v1/ambulances with admin token', 'FAIL', err.message);
   }
 
-  // 5. GET /api/v1/hospitals
+  // 5. GET /api/v1/hospitals (with authenticated token)
   try {
-    const res = await fetch(`${BASE_URL}/api/v1/hospitals`);
-    if (res.status === 200) {
-      const data = await res.json();
-      if (data.success && Array.isArray(data.data)) {
-        record('GET /api/v1/hospitals returns hospital list', 'PASS');
-      } else {
-        record('GET /api/v1/hospitals returns hospital list', 'FAIL', 'Data is not an array');
-      }
+    if (!adminToken) {
+      record('GET /api/v1/hospitals returns hospital list', 'FAIL', 'Skipped: Token unavailable');
     } else {
-      record('GET /api/v1/hospitals returns hospital list', 'FAIL', `HTTP Status: ${res.status}`);
+      const res = await fetch(`${BASE_URL}/api/v1/hospitals`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      if (res.status === 200) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          record('GET /api/v1/hospitals returns hospital list', 'PASS');
+        } else {
+          record('GET /api/v1/hospitals returns hospital list', 'FAIL', 'Data is not an array');
+        }
+      } else {
+        record('GET /api/v1/hospitals returns hospital list', 'FAIL', `HTTP Status: ${res.status}`);
+      }
     }
   } catch (err: any) {
     record('GET /api/v1/hospitals returns hospital list', 'FAIL', err.message);
