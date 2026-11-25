@@ -1,8 +1,8 @@
 # API Routes Audit
 
-Generated at: 2026-11-25T04:14:29.364Z
+Generated at: 2026-11-25T04:18:28.020Z
 
-Total Routes: 52
+Total Routes: 60
 
 | Method | Path |
 |---|---|
@@ -49,6 +49,14 @@ Total Routes: 52
 | GET | /api/v1/notifications |
 | PATCH | /api/v1/notifications/:id/read |
 | PATCH | /api/v1/notifications/read-all |
+| GET | /api/v1/payments |
+| GET | /api/v1/payments/:id |
+| POST | /api/v1/payments/cancel |
+| POST | /api/v1/payments/fail |
+| POST | /api/v1/payments/initiate |
+| POST | /api/v1/payments/ipn |
+| GET | /api/v1/payments/my |
+| POST | /api/v1/payments/success |
 | GET | /api/v1/trips |
 | GET | /api/v1/trips/:id |
 | PATCH | /api/v1/trips/:id/hospital |
