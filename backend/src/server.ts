@@ -32,6 +32,17 @@ async function bootstrap() {
 
   const unexpectedErrorHandler = (error: unknown) => {
     console.error('Unexpected Error:', error);
+    // Neon PostgreSQL serverless idle timeouts or closed sockets should not crash the HTTP server
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (
+      errorMessage.includes('Closed') ||
+      errorMessage.includes('connection closed') ||
+      errorMessage.includes('Connection terminated') ||
+      errorMessage.includes('Server has closed the connection')
+    ) {
+      console.warn('⚠️ Database connection reset/closed by host. Retaining HTTP server to allow reconnection on next request.');
+      return;
+    }
     exitHandler();
   };
 
